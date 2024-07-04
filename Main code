@@ -2,375 +2,333 @@ local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/
 
 local window = DrRayLibrary:Load("Rinns Hub", "Default")
 
-local aimlockEnabled = false
-local autoFarmMurderersEnabled = false
-local autoFarmSheriffsEnabled = false
-local espEnabled = false
-local teleportToSafeSpotEnabled = false
-local targetPlayer = nil
-local espConnections = {}
-local originalPosition = nil
+local mainTab = DrRayLibrary.newTab("Main Tab", "ImageIdHere")
+local miscTab = DrRayLibrary.newTab("Misc Tab", "ImageIdHere")
+local espTab = DrRayLibrary.newTab("Esp Tab", "ImageIdHere")
 
-local SheriffTeam = "Sheriffs"    -- The name of the Sheriffs team
-local MurderersTeam = "Murderers"  -- The name of the Murderers team
+local hitboxEnabled = false
 
-local function isEnemy(player, target)
-    if player.Team and target.Team then
-        return (player.Team.Name == SheriffTeam and target.Team.Name == MurderersTeam) or 
-               (player.Team.Name == MurderersTeam and target.Team.Name == SheriffTeam)
-    end
-    return false
-end
+getgenv().HitboxSize = 15
+getgenv().HitboxTransparency = 0.5
 
-local function isAlive(player)
-    local character = player.Character
-    if character then
-        local humanoid = character:FindFirstChild("Humanoid")
-        if humanoid and humanoid.Health > 0 then
-            return true
-        end
-    end
-    return false
-end
-
-local function findNearestFacingEnemy(player)
-    local Players = game:GetService("Players")
-    local nearestDistance = math.huge
-    local nearestPlayer = nil
-    local camera = game.Workspace.CurrentCamera
-
-    for _, target in ipairs(Players:GetPlayers()) do
-        if target ~= player and isEnemy(player, target) and isAlive(target) then
-            local distance = (player.Character.HumanoidRootPart.Position - target.Character.HumanoidRootPart.Position).Magnitude
-            local direction = (target.Character.HumanoidRootPart.Position - camera.CFrame.Position).Unit
-            local angle = math.acos(camera.CFrame.LookVector:Dot(direction))
-            if distance < nearestDistance and angle < math.rad(30) then  -- 30 degree cone in front of the player
-                nearestDistance = distance
-                nearestPlayer = target
+-- Hitbox function
+local function updateHitbox()
+    game:GetService('RunService').RenderStepped:Connect(function()
+        if hitboxEnabled then
+            for _, v in next, game:GetService('Players'):GetPlayers() do
+                if v.Name ~= game:GetService('Players').LocalPlayer.Name and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                    pcall(function()
+                        v.Character.HumanoidRootPart.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
+                        v.Character.HumanoidRootPart.Transparency = getgenv().HitboxTransparency
+                        v.Character.HumanoidRootPart.BrickColor = BrickColor.new("Really black")
+                        v.Character.HumanoidRootPart.Material = "Neon"
+                        v.Character.HumanoidRootPart.CanCollide = false
+                    end)
+                end
             end
-        end
-    end
-
-    return nearestPlayer
-end
-
-local function findNearestEnemy(player)
-    local Players = game:GetService("Players")
-    local nearestDistance = math.huge
-    local nearestPlayer = nil
-
-    for _, target in ipairs(Players:GetPlayers()) do
-        if target ~= player and isEnemy(player, target) and isAlive(target) then
-            local distance = (player.Character.HumanoidRootPart.Position - target.Character.HumanoidRootPart.Position).Magnitude
-            if distance < nearestDistance then
-                nearestDistance = distance
-                nearestPlayer = target
-            end
-        end
-    end
-
-    return nearestPlayer
-end
-
-local function aimAtTarget(player, targetPlayer)
-    local camera = game:GetService("Workspace").CurrentCamera
-    local targetPart = targetPlayer.Character:FindFirstChild("Head") or targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if targetPart then
-        camera.CFrame = CFrame.new(camera.CFrame.Position, targetPart.Position)
-    end
-end
-
-local function teleportBehindTarget(player, targetPlayer)
-    local targetPosition = targetPlayer.Character.HumanoidRootPart.Position
-    local behindPosition = targetPosition - (targetPlayer.Character.HumanoidRootPart.CFrame.LookVector * 3) -- 3 studs behind the target
-    behindPosition = behindPosition + Vector3.new(0, 2, 0) -- Adjust height to avoid clipping into the ground
-    player.Character.HumanoidRootPart.CFrame = CFrame.new(behindPosition)
-end
-
-local function startAimlock()
-    local Players = game:GetService("Players")
-    local player = Players.LocalPlayer
-
-    -- Main aimlock loop
-    while aimlockEnabled do
-        if player.Character and isAlive(player) then
-            local newTargetPlayer = findNearestFacingEnemy(player)
-            if newTargetPlayer and newTargetPlayer ~= targetPlayer then
-                targetPlayer = newTargetPlayer
-            end
-
-            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                aimAtTarget(player, targetPlayer)
-            end
-        end
-        wait(0.01)  -- Minimal delay for more precision
-    end
-end
-
-local function startAutoFarmMurderers()
-    local Players = game:GetService("Players")
-    local player = Players.LocalPlayer
-
-    -- Main auto farm loop
-    while autoFarmMurderersEnabled do
-        if player.Character and isAlive(player) then
-            if not targetPlayer or not isAlive(targetPlayer) then
-                targetPlayer = findNearestEnemy(player)
-            end
-
-            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                teleportBehindTarget(player, targetPlayer)
-                
-                local args = {
-                    [1] = targetPlayer.Character.HumanoidRootPart,
-                    [2] = "Slash"
-                }
-                game:GetService("Players").LocalPlayer.Character.Knife.Damage:FireServer(unpack(args))
-            end
-        end
-        wait(0.1)  -- Adjust delay as needed
-    end
-end
-
-local function startAutoFarmSheriffs()
-    local Players = game:GetService("Players")
-    local player = Players.LocalPlayer
-
-    -- Main auto farm loop
-    while autoFarmSheriffsEnabled do
-        if player.Character and isAlive(player) then
-            if not targetPlayer or not isAlive(targetPlayer) then
-                targetPlayer = findNearestEnemy(player)
-            end
-
-            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                teleportBehindTarget(player, targetPlayer)
-                
-                local args = {
-                    [1] = targetPlayer.Character.RightHand,
-                    [2] = Vector3.new(13.421182632446289, 114.77058410644531, 14.178533554077148),
-                    [3] = Vector3.new(13.445096969604492, 115.99995422363281, 5.678727626800537)
-                }
-                game:GetService("Players").LocalPlayer.Character.Gun.Damage:FireServer(unpack(args))
-            end
-        end
-        wait(0.1)  -- Adjust delay as needed
-    end
-end
-
-local function startESP()
-    local Players = game:GetService("Players")
-    local player = Players.LocalPlayer
-
-    local function highlightPlayer(target)
-        local Character = target.Character or target.CharacterAdded:Wait()
-        local Humanoid = Character:WaitForChild("Humanoid")
-        local Highlighter = Instance.new("Highlight", Character)
-        Highlighter.FillColor = (target.TeamColor and target.TeamColor.Color) or Color3.fromRGB(255, 48, 51)
-        
-        table.insert(espConnections, Humanoid.Changed:Connect(function()
-            if Humanoid.Health <= 0 then
-                Highlighter:Destroy()
-            end
-        end))
-    end
-
-    local function highlightFunc(target)
-        if target.Character then
-            highlightPlayer(target)
-        end
-        table.insert(espConnections, target.CharacterAdded:Connect(function()
-            highlightPlayer(target)
-        end))
-    end
-
-    for _, target in ipairs(Players:GetPlayers()) do
-        if target ~= player then
-            highlightFunc(target)
-        end
-    end
-
-    table.insert(espConnections, Players.PlayerAdded:Connect(function(target)
-        highlightFunc(target)
-    end))
-end
-
-local function stopESP()
-    for _, connection in ipairs(espConnections) do
-        connection:Disconnect()
-    end
-    espConnections = {}
-end
-
-local function teleportToSafeSpot(toggleState)
-    local player = game:GetService("Players").LocalPlayer
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        if toggleState then
-            originalPosition = player.Character.HumanoidRootPart.CFrame
-            player.Character.HumanoidRootPart.CFrame = CFrame.new(4995.77490234375, -36.5000114440918, -18.143943786621094)
         else
-            if originalPosition then
-                player.Character.HumanoidRootPart.CFrame = originalPosition
-                originalPosition = nil
+            for _, v in next, game:GetService('Players'):GetPlayers() do
+                if v.Name ~= game:GetService('Players').LocalPlayer.Name and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                    pcall(function()
+                        v.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+                        v.Character.HumanoidRootPart.Transparency = 1
+                        v.Character.HumanoidRootPart.BrickColor = BrickColor.new("Medium stone grey")
+                        v.Character.HumanoidRootPart.Material = "Plastic"
+                        v.Character.HumanoidRootPart.CanCollide = false
+                    end)
+                end
+            end
+        end
+    end)
+end
+
+mainTab.newToggle("Hitbox", "Changes the hitbox of other players", true, function(toggleState)
+    hitboxEnabled = toggleState
+    if toggleState then
+        print("On")
+        updateHitbox()
+    else
+        print("Off")
+    end
+end)
+
+mainTab.newSlider("Hitbox Slider", "Change the size of players hitboxes", 500, false, function(num)
+    getgenv().HitboxSize = num
+end)
+
+mainTab.newButton("Kill All", "Kills everyone in the match have your knife out and be in a match", function()
+    local player = game:GetService("Players").LocalPlayer
+    local radius = 150
+    local playersInRadius = {}
+
+    -- Find all players within the radius
+    for _, v in pairs(game:GetService("Players"):GetPlayers()) do
+        if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+            local distance = (v.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).magnitude
+            if distance <= radius then
+                table.insert(playersInRadius, v)
             end
         end
     end
+
+    -- Function to teleport around a player and run the stab code
+    local function teleportAndStab(target)
+        local positions = {
+            Vector3.new(0, 0, -5),
+            Vector3.new(0, 0, 5),
+            Vector3.new(-5, 0, 0),
+            Vector3.new(5, 0, 0)
+        }
+        for _, pos in pairs(positions) do
+            player.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(pos)
+            wait(0.09)
+        end
+        local args = {
+            [1] = target.Character.UpperTorso
+        }
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Stab"):FireServer(unpack(args))
+    end
+
+    -- Process each player in the radius
+    for _, target in pairs(playersInRadius) do
+        teleportAndStab(target)
+    end
+end)
+
+-- settings
+local settings = {
+    defaultcolor = Color3.fromRGB(0, 0, 139), -- Dark Blue
+    teamcheck = false,
+    teamcolor = true,
+    boxESPEnabled = false,
+    tracersEnabled = false,
+    distanceESPEnabled = false,
+    nameESPEnabled = false,
+    rainbowEnabled = false
+}
+
+-- services
+local runService = game:GetService("RunService")
+local players = game:GetService("Players")
+
+-- variables
+local localPlayer = players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-- functions
+local newVector2, newColor3, newDrawing = Vector2.new, Color3.new, Drawing.new
+local tan, rad = math.tan, math.rad
+local round = function(...)
+    local a = {}
+    for i, v in next, table.pack(...) do
+        a[i] = math.round(v)
+    end
+    return unpack(a)
+end
+local wtvp = function(...)
+    local a, b = camera.WorldToViewportPoint(camera, ...)
+    return newVector2(a.X, a.Y), b, a.Z
+end
+local espCache = {}
+local function createEsp(player)
+    local drawings = {}
+    drawings.box = newDrawing("Square")
+    drawings.box.Thickness = 1
+    drawings.box.Filled = false
+    drawings.box.Color = settings.defaultcolor
+    drawings.box.Visible = false
+    drawings.box.ZIndex = 2
+    drawings.boxoutline = newDrawing("Square")
+    drawings.boxoutline.Thickness = 2
+    drawings.boxoutline.Filled = false
+    drawings.boxoutline.Color = newColor3()
+    drawings.boxoutline.Visible = false
+    drawings.boxoutline.ZIndex = 1
+    drawings.tracer = newDrawing("Line")
+    drawings.tracer.Thickness = 1
+    drawings.tracer.Color = settings.defaultcolor
+    drawings.tracer.Visible = false
+    drawings.tracer.ZIndex = 1
+    drawings.name = newDrawing("Text")
+    drawings.name.Text = player.Name
+    drawings.name.Size = 14
+    drawings.name.Center = true
+    drawings.name.Outline = true
+    drawings.name.Visible = false
+    drawings.name.Color = settings.defaultcolor
+    drawings.distance = newDrawing("Text")
+    drawings.distance.Size = 14
+    drawings.distance.Center = true
+    drawings.distance.Outline = true
+    drawings.distance.Visible = false
+    drawings.distance.Color = settings.defaultcolor
+    espCache[player] = drawings
+end
+local function removeEsp(player)
+    if rawget(espCache, player) then
+        for _, drawing in next, espCache[player] do
+            drawing:Remove()
+        end
+        espCache[player] = nil
+    end
+end
+local function updateEsp(player, esp)
+    local character = player and player.Character
+    if character then
+        local head = character:FindFirstChild("Head")
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+        if head and rootPart then
+            local headPos, headVisible = wtvp(head.Position)
+            local rootPos, rootVisible = wtvp(rootPart.Position)
+            local visible = headVisible and rootVisible
+            esp.box.Visible = visible and settings.boxESPEnabled
+            esp.boxoutline.Visible = visible and settings.boxESPEnabled
+            esp.tracer.Visible = visible and settings.tracersEnabled
+            esp.name.Visible = visible and settings.nameESPEnabled
+            esp.distance.Visible = visible and settings.distanceESPEnabled
+            if visible then
+                local minPos, maxPos = Vector3.new(math.huge, math.huge, math.huge), Vector3.new(-math.huge, -math.huge, -math.huge)
+                for _, part in pairs(character:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        local partPos = part.Position
+                        if partPos.X < minPos.X then minPos = Vector3.new(partPos.X, minPos.Y, minPos.Z) end
+                        if partPos.Y < minPos.Y then minPos = Vector3.new(minPos.X, partPos.Y, minPos.Z) end
+                        if partPos.Z < minPos.Z then minPos = Vector3.new(minPos.X, minPos.Y, partPos.Z) end
+                        if partPos.X > maxPos.X then maxPos = Vector3.new(partPos.X, maxPos.Y, maxPos.Z) end
+                        if partPos.Y > maxPos.Y then maxPos = Vector3.new(maxPos.X, partPos.Y, maxPos.Z) end
+                        if partPos.Z > maxPos.Z then maxPos = Vector3.new(maxPos.X, maxPos.Y, partPos.Z) end
+                    end
+                end
+                local minScreenPos, _ = wtvp(minPos)
+                local maxScreenPos, _ = wtvp(maxPos)
+                local width, height = maxScreenPos.X - minScreenPos.X, maxScreenPos.Y - minScreenPos.Y
+                local x, y = round(minScreenPos.X + width / 2, minScreenPos.Y + height / 2)
+                esp.box.Size = newVector2(width, height)
+                esp.box.Position = newVector2(round(x - width / 2, y - height / 2))
+                esp.box.Color = settings.teamcolor and player.TeamColor.Color or settings.defaultcolor
+                esp.boxoutline.Size = esp.box.Size
+                esp.boxoutline.Position = esp.box.Position
+                local localHead = localPlayer.Character and localPlayer.Character:FindFirstChild("Head")
+                if localHead then
+                    local localHeadPos = wtvp(localHead.Position)
+                    esp.tracer.From = localHeadPos
+                    esp.tracer.To = headPos
+                    esp.tracer.Color = esp.box.Color
+                end
+                esp.name.Position = newVector2(x, y - height / 2 - 16)
+                esp.name.Color = esp.box.Color
+                local distance = (localPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
+                esp.distance.Text = string.format("%.0f", distance) .. "m"
+                esp.distance.Position = newVector2(x, y + height / 2 + 16)
+                esp.distance.Color = esp.box.Color
+            end
+        end
+    else
+        esp.box.Visible = false
+        esp.boxoutline.Visible = false
+        esp.tracer.Visible = false
+        esp.name.Visible = false
+        esp.distance.Visible = false
+    end
 end
 
-local function rejoinServer()
-    local TeleportService = game:GetService("TeleportService")
-    local Players = game:GetService("Players")
-    local player = Players.LocalPlayer
-
-    TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
+local function rainbowColorTransition()
+    local t = tick() * 0.1
+    return Color3.fromHSV(t % 1, 1, 1)
 end
 
-local function serverHop()
-    local HttpService = game:GetService("HttpService")
-    local TeleportService = game:GetService("TeleportService")
-    local Players = game:GetService("Players")
-    local player = Players.LocalPlayer
-
-    local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")).data
-
-    for _, server in ipairs(servers) do
-        if server.playing < server.maxPlayers and server.id ~= game.JobId then
-            TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
-            break
+-- main
+for _, player in next, players:GetPlayers() do
+    if player ~= localPlayer then createEsp(player) end
+end
+players.PlayerAdded:Connect(function(player) createEsp(player) end)
+players.PlayerRemoving:Connect(function(player) removeEsp(player) end)
+runService:BindToRenderStep("esp", Enum.RenderPriority.Camera.Value, function()
+    for player, drawings in next, espCache do
+        if settings.teamcheck and player.Team == localPlayer.Team then continue end
+        if drawings and player ~= localPlayer then
+            updateEsp(player, drawings)
+            if settings.rainbowEnabled then
+                local rainbowColor = rainbowColorTransition()
+                drawings.box.Color = rainbowColor
+                drawings.tracer.Color = rainbowColor
+                drawings.name.Color = rainbowColor
+                drawings.distance.Color = rainbowColor
+            end
         end
     end
-end
-
-local function serverHopLowPlayers()
-    local HttpService = game:GetService("HttpService")
-    local TeleportService = game:GetService("TeleportService")
-    local Players = game:GetService("Players")
-    local player = Players.LocalPlayer
-
-    local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")).data
-
-    table.sort(servers, function(a, b) return a.playing < b.playing end)
-
-    for _, server in ipairs(servers) do
-        if server.playing < server.maxPlayers and server.id ~= game.JobId then
-            TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
-            break
-        end
-    end
-end
-
-local tab = DrRayLibrary.newTab("Main Tab", "ImageIdHere")
-
-tab.newToggle("Aimlock", "Allows you to lock onto players on the opposite team", false, function(toggleState)
-    aimlockEnabled = toggleState
-    if toggleState then
-        print("Aimlock On")
-        coroutine.wrap(startAimlock)()
-    else
-        print("Aimlock Off")
-        targetPlayer = nil
-    end
 end)
 
-tab.newToggle("Auto Farm For Murderers (Faster)", "Automatically teleports behind players on the opposite team. Make sure you are in the Murderers team and have your knife equipped.", false, function(toggleState)
-    autoFarmMurderersEnabled = toggleState
-    if toggleState then
-        print("Auto Farm For Murderers (Faster) On")
-        coroutine.wrap(startAutoFarmMurderers)()
-    else
-        print("Auto Farm For Murderers (Faster) Off")
-        targetPlayer = nil
-    end
+-- GUI integration
+espTab.newToggle("Box Esp", "Draws a box around every player", true, function(toggleState)
+    settings.boxESPEnabled = toggleState
 end)
-
-tab.newToggle("Auto Farm For Sheriffs (Slower)", "Automatically teleports behind players on the Murderers team and attacks with a gun. Make sure you are in the Sheriffs team and have your gun equipped.", false, function(toggleState)
-    autoFarmSheriffsEnabled = toggleState
-    if toggleState then
-        print("Auto Farm For Sheriffs (Slower) On")
-        coroutine.wrap(startAutoFarmSheriffs)()
-    else
-        print("Auto Farm For Sheriffs (Slower) Off")
-        targetPlayer = nil
-    end
+espTab.newToggle("Tracers Esp", "Draws a line to every player", true, function(toggleState)
+    settings.tracersEnabled = toggleState
 end)
-
-local visualsTab = DrRayLibrary.newTab("Visuals", "ImageIdHere")
-
-visualsTab.newButton("Highlights", "Highlights every player. Blue is sheriff, red is murderer.", function()
-    if espEnabled then
-        stopESP()
-    else
-        startESP()
-    end
-    espEnabled = not espEnabled
+espTab.newToggle("Distance Esp", "Displays the distance to every player", true, function(toggleState)
+    settings.distanceESPEnabled = toggleState
 end)
-
-local teleportsTab = DrRayLibrary.newTab("Teleports", "ImageIdHere")
-
-teleportsTab.newToggle("Teleport to Safe Spot", "Teleports you to a safe spot", false, function(toggleState)
-    teleportToSafeSpot(toggleState)
+espTab.newToggle("Name Esp", "Displays the name of every player", true, function(toggleState)
+    settings.nameESPEnabled = toggleState
 end)
-
-local serversTab = DrRayLibrary.newTab("Servers", "ImageIdHere")
-
-serversTab.newButton("Rejoin Server", "Rejoin the current server if you get kicked", function()
-    rejoinServer()
-end)
-
-serversTab.newButton("Server Hop", "Join a random server", function()
-    serverHop()
-end)
-
-serversTab.newButton("Server Hop Low Players", "Join the server with the lowest number of players", function()
-    serverHopLowPlayers()
+espTab.newToggle("Rainbow Esp", "Enables rainbow color transition for ESP", false, function(toggleState)
+    settings.rainbowEnabled = toggleState
 end)
 
 local NotificationHolder = loadstring(game:HttpGet("https://raw.githubusercontent.com/BocusLuke/UI/main/STX/Module.Lua"))()
 local Notification = loadstring(game:HttpGet("https://raw.githubusercontent.com/BocusLuke/UI/main/STX/Client.Lua"))()
 
 Notification:Notify(
-    {Title = "Thanks For using Rinns Hub", Description = "Thank you for using Rinns Hub join the discord to report any bugs gives suggestion, etc https://discord.com/invite/rCRPBsxYAa"},
-    {OutlineColor = Color3.fromRGB(80, 80, 80), Time = 5, Type = "option"},
+    {Title = "IMPORTANT", Description = "If any of the toggles are already green turn it off then turn it on for the feature to work black = off green = on"},
+    {OutlineColor = Color3.fromRGB(80, 80, 80), Time = 8, Type = "option"},
     {Image = "http://www.roblox.com/asset/?id=6023426923", ImageColor = Color3.fromRGB(255, 84, 84), Callback = function(State) print(tostring(State)) end}
 )
 
--- Highlight function for existing and new players
-local function highlightFunc(target)
-    local function highlightPlayer(target)
-        local Character = target.Character or target.CharacterAdded:Wait()
-        local Humanoid = Character:WaitForChild("Humanoid")
-        local Highlighter = Instance.new("Highlight", Character)
-        Highlighter.FillColor = (target.TeamColor and target.TeamColor.Color) or Color3.fromRGB(255, 48, 51)
-        
-        table.insert(espConnections, Humanoid.Changed:Connect(function()
-            if Humanoid.Health <= 0 then
-                Highlighter:Destroy()
-            end
-        end))
-    end
+-- Misc Tab Buttons
+miscTab.newButton("Teleport to 1v1", "Teleports the user to 1v1 position", function()
+    local player = game:GetService("Players").LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(72.83, -280.17, -1350.06)
+end)
 
-    if target.Character then
-        highlightPlayer(target)
-    end
-    table.insert(espConnections, target.CharacterAdded:Connect(function()
-        highlightPlayer(target)
-    end))
-end
+miscTab.newButton("Teleport to 2v2", "Teleports the user to 2v2 position", function()
+    local player = game:GetService("Players").LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(55.30, -280.17, -1348.42)
+end)
 
--- Run the highlighting function for existing players
-local function highlightExistingPlayers()
-    for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
-        if player ~= game:GetService("Players").LocalPlayer then
-            highlightFunc(player)
+miscTab.newButton("Teleport to 3v3", "Teleports the user to 3v3 position", function()
+    local player = game:GetService("Players").LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(33.76, -280.17, -1348.96)
+end)
+
+miscTab.newButton("Teleport to 4v4", "Teleports the user to 4v4 position", function()
+    local player = game:GetService("Players").LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(9.90, -280.17, -1348.51)
+end)
+
+miscTab.newButton("Rejoin", "Rejoins the current server", function()
+    local player = game:GetService("Players").LocalPlayer
+    local teleportService = game:GetService("TeleportService")
+    teleportService:Teleport(game.PlaceId, player)
+end)
+
+miscTab.newButton("Serverhop", "Joins a different server", function()
+    local player = game:GetService("Players").LocalPlayer
+    local teleportService = game:GetService("TeleportService")
+    local httpService = game:GetService("HttpService")
+    local servers = httpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")).data
+
+    local availableServers = {}
+    for _, server in pairs(servers) do
+        if server.playing < server.maxPlayers and server.id ~= game.JobId then
+            table.insert(availableServers, server.id)
         end
     end
-end
 
-highlightExistingPlayers()
-
--- Connect the player added event to the highlighting function
-game:GetService("Players").PlayerAdded:Connect(function(player)
-    if player ~= game:GetService("Players").LocalPlayer then
-        highlightFunc(player)
+    if #availableServers > 0 then
+        local serverId = availableServers[math.random(1, #availableServers)]
+        teleportService:TeleportToPlaceInstance(game.PlaceId, serverId, player)
+    else
+        print("No available servers found.")
     end
 end)
