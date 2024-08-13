@@ -9,7 +9,7 @@ local espTab = DrRayLibrary.newTab("Esp Tab", "ImageIdHere")
 local hitboxEnabled = false
 
 getgenv().HitboxSize = 15
-getgenv().HitboxTransparency = 0.5
+getgenv().HitboxTransparency = 0.3
 
 -- Hitbox function
 local function updateHitbox()
@@ -286,24 +286,24 @@ Notification:Notify(
 )
 
 -- Misc Tab Buttons
-miscTab.newButton("Teleport to 1v1", "Teleports the user to 1v1 position", function()
+miscTab.newButton("Teleport to 1v1", "Teleports you to a 1v1 pad", function()
     local player = game:GetService("Players").LocalPlayer
-    player.Character.HumanoidRootPart.CFrame = CFrame.new(72.83, -280.17, -1350.06)
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(27.487422943115234, -92.41087341308594, -197.7819061279297)
 end)
 
-miscTab.newButton("Teleport to 2v2", "Teleports the user to 2v2 position", function()
+miscTab.newButton("Teleport to 2v2", "Teleports you to a 2v2 pad", function()
     local player = game:GetService("Players").LocalPlayer
-    player.Character.HumanoidRootPart.CFrame = CFrame.new(55.30, -280.17, -1348.42)
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(26.931743621826172, -92.36271667480469, -188.55674743652344)
 end)
 
-miscTab.newButton("Teleport to 3v3", "Teleports the user to 3v3 position", function()
+miscTab.newButton("Teleport to 3v3", "Teleports you to a 3v3 pad", function()
     local player = game:GetService("Players").LocalPlayer
-    player.Character.HumanoidRootPart.CFrame = CFrame.new(33.76, -280.17, -1348.96)
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(28.009746551513672, -92.29627990722656, -172.41270446777344)
 end)
 
-miscTab.newButton("Teleport to 4v4", "Teleports the user to 4v4 position", function()
+miscTab.newButton("Teleport to 4v4", "Teleports you to a 4v4 pad", function()
     local player = game:GetService("Players").LocalPlayer
-    player.Character.HumanoidRootPart.CFrame = CFrame.new(9.90, -280.17, -1348.51)
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(28.749866485595703, -92.2002182006836, -153.6609649658203)
 end)
 
 miscTab.newButton("Rejoin", "Rejoins the current server", function()
