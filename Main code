@@ -108,3 +108,57 @@ tab.newSlider("Knife Aura Range", "Changes the range of the knife aura", 30, fal
     print("Knife range set to: " .. num)
 end)
 
+local tab = DrRayLibrary.newTab("Visuals Tab", "ImageIdHere")
+
+-- Variables to keep track of the part and its state
+local part
+local rainbowConnection
+
+-- Function to create the part
+local function createPart()
+    part = Instance.new("Part")
+    part.Size = Vector3.new(100, 1, 100) -- Making it even larger and flat
+    part.Anchored = true
+    part.CanCollide = false
+    part.Material = Enum.Material.SmoothPlastic
+    part.Transparency = 0.25 -- Set to 0.25 transparency
+    part.Parent = workspace
+
+    -- Function to update the part's position and color
+    rainbowConnection = game:GetService("RunService").RenderStepped:Connect(function()
+        -- Get the player and their character
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local rootPart = player.Character.HumanoidRootPart
+            part.Position = rootPart.Position - Vector3.new(0, 20, 0) -- Position it 20 studs below the player
+
+            -- Slower rainbow color transition
+            local hue = (tick() % 20) / 20 -- Slows down the color transition
+            part.Color = Color3.fromHSV(hue, 1, 1)
+        end
+    end)
+end
+
+-- Function to remove the part
+local function removePart()
+    if rainbowConnection then
+        rainbowConnection:Disconnect()
+        rainbowConnection = nil
+    end
+    if part then
+        part:Destroy()
+        part = nil
+    end
+end
+
+-- Toggle for creating and removing the part
+tab.newToggle("Cool Part", "Toggle! (prints the state)", false, function(toggleState)
+    if toggleState then
+        print("On")
+        createPart()
+    else
+        print("Off")
+        removePart()
+    end
+end)
+
