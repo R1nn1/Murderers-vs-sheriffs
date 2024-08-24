@@ -159,6 +159,16 @@ tab.newSlider("Hitbox Slider", "Change the size of players hitboxes", 500, false
     print("Hitbox size set to:", num)
 end)
 
+tab.newInput("Hitbox Transparency", "Changes the transparency of the hitboxes 0.1 - 1", function(text)
+    local transparency = tonumber(text)
+    if transparency and transparency >= 0 and transparency <= 1 then
+        getgenv().HitboxTransparency = transparency
+        print("Hitbox transparency set to:", transparency)
+    else
+        print("Invalid transparency value. Please enter a number between 0 and 1.")
+    end
+end)
+
 local tab = DrRayLibrary.newTab("Visuals Tab", "ImageIdHere")
 
 -- Variables to keep track of the part and its state
