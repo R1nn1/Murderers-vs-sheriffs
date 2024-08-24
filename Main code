@@ -130,7 +130,7 @@ local function createPart()
         local player = game.Players.LocalPlayer
         if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             local rootPart = player.Character.HumanoidRootPart
-            part.Position = rootPart.Position - Vector3.new(0, 20, 0) -- Position it 20 studs below the player
+            part.Position = rootPart.Position - Vector3.new(0, 7, 0) -- Position it 20 studs below the player
 
             -- Slower rainbow color transition
             local hue = (tick() % 20) / 20 -- Slows down the color transition
@@ -152,7 +152,7 @@ local function removePart()
 end
 
 -- Toggle for creating and removing the part
-tab.newToggle("Cool Part", "Toggle! (prints the state)", false, function(toggleState)
+tab.newToggle("Cool Part", "Makes A Cool Part Below Your Feet Oh yea", false, function(toggleState)
     if toggleState then
         print("On")
         createPart()
