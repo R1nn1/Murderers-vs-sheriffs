@@ -3,7 +3,7 @@ local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/
 
 -- Create a window using DrRay UI
 local window = DrRayLibrary:Load("Rinns Hub", "Default")
-local tab = window.newTab("Main Tab", "ImageIdHere")
+local tab = DrRayLibrary.newTab("Main Tab", "ImageIdHere")
 
 -- Kill all function
 local function kill_all()
