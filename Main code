@@ -52,3 +52,59 @@ tab.newToggle("Loop Kill All", "loops kill every player in your match", false, f
         end
     end
 end)
+
+local auraEnabled = false
+local knifeRange = 15 -- Default range
+
+-- Knife Aura Toggle
+tab.newToggle("Knife Aura", "Kills anyone in the range with your knife (have your knife out)", true, function(toggleState)
+    auraEnabled = toggleState
+    if toggleState then
+        print("Knife Aura On")
+        -- Start checking for players in range
+        spawn(function()
+            while auraEnabled do
+                -- Get the local player's position
+                local localPlayer = game.Players.LocalPlayer
+                local localCharacter = localPlayer.Character
+                if localCharacter and localCharacter:FindFirstChild("HumanoidRootPart") then
+                    local localPosition = localCharacter.HumanoidRootPart.Position
+                    
+                    -- Loop through all players in the game
+                    for _, player in pairs(game.Players:GetPlayers()) do
+                        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                            local targetPosition = player.Character.HumanoidRootPart.Position
+                            local distance = (localPosition - targetPosition).Magnitude
+                            
+                            -- If the player is within the knife range
+                            if distance <= knifeRange then
+                                print("Found player in range: " .. player.Name)
+                                
+                                -- Replace 'Little_TrashMonkey' with the player in range
+                                local args = {
+                                    [1] = player.Character.UpperTorso
+                                }
+                                
+                                -- Fire the server event
+                                game:GetService("ReplicatedStorage").Remotes.Stab:FireServer(unpack(args))
+                                
+                                -- Add a slight delay to avoid rapid stabbing
+                                wait(0.5)
+                            end
+                        end
+                    end
+                end
+                wait(0.1) -- Adjust as needed for checking frequency
+            end
+        end)
+    else
+        print("Knife Aura Off")
+    end
+end)
+
+-- Knife Aura Range Slider
+tab.newSlider("Knife Aura Range", "Changes the range of the knife aura", 30, false, function(num)
+    knifeRange = num -- Update the knife range with the slider value
+    print("Knife range set to: " .. num)
+end)
+
