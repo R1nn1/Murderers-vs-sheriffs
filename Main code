@@ -171,6 +171,7 @@ end)
 
 local tab = DrRayLibrary.newTab("Visuals Tab", "ImageIdHere")
 
+
 -- Variables to keep track of the part and its state
 local part
 local rainbowConnection
@@ -222,6 +223,53 @@ tab.newToggle("Cool Part", "Makes A Cool Part Below Your Feet Oh yea", false, fu
         removePart()
     end
 end)
+
+-- Variables for highlighting state
+local highlightEnabled = false
+
+-- Function to highlight players
+local function updateHighlight()
+    for _, player in pairs(game:GetService('Players'):GetPlayers()) do
+        if player.Name ~= game:GetService('Players').LocalPlayer.Name and player.Character then
+            local character = player.Character
+            if highlightEnabled then
+                -- Create a Highlight object if it doesn't already exist
+                if not character:FindFirstChild("PlayerHighlight") then
+                    local highlight = Instance.new("Highlight")
+                    highlight.Name = "PlayerHighlight"
+                    highlight.Adornee = character
+                    highlight.FillColor = Color3.new(1, 0, 0)  -- Red color
+                    highlight.OutlineColor = Color3.new(1, 1, 1)  -- White outline
+                    highlight.Parent = character
+                end
+            else
+                -- Remove the Highlight object if it exists
+                if character:FindFirstChild("PlayerHighlight") then
+                    character:FindFirstChild("PlayerHighlight"):Destroy()
+                end
+            end
+        end
+    end
+end
+
+-- Update highlights every time a player joins or leaves
+game:GetService('Players').PlayerAdded:Connect(updateHighlight)
+game:GetService('Players').PlayerRemoving:Connect(updateHighlight)
+
+-- Initial call to update highlights based on current state
+updateHighlight()
+
+-- Toggle for highlighting players
+tab.newToggle("Highlights", "Highlights every player", false, function(toggleState)
+    highlightEnabled = toggleState
+    updateHighlight()  -- Update highlights based on the new state
+    if toggleState then
+        print("Highlighting enabled")
+    else
+        print("Highlighting disabled")
+    end
+end)
+
 
 local tab = DrRayLibrary.newTab("Misc Tab", "ImageIdHere")
 
