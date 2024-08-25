@@ -218,7 +218,7 @@ Tab:CreateInput({
 })
 
 -- Initialize the ArrayField library
-local VisualsTab = Window:CreateTab("Visuals Tab", 4483362458) -- Title, Image
+local VisualsTab = Window:CreateTab("Visuals Tab", "ImageIdHere") -- Updated to use CreateTab
 
 -- Variables to keep track of the part and its state
 local part
@@ -262,13 +262,21 @@ local function removePart()
 end
 
 -- Toggle for creating and removing the part
-VisualsTab:NewToggle("Cool Part", "Makes A Cool Part Below Your Feet Oh yea", false, function(toggleState)
-    if toggleState then
-        createPart()
-    else
-        removePart()
-    end
-end)
+VisualsTab:CreateButton({
+    Name = "Cool Part",
+    Info = {
+        Title = "Makes A Cool Part Below Your Feet Oh yea",
+        Description = "Toggles a cool part that follows you around.",
+    },
+    Interact = "Changable",
+    Callback = function()
+        if part then
+            removePart()
+        else
+            createPart()
+        end
+    end,
+})
 
 -- Variables for highlighting state
 local highlightEnabled = false
@@ -306,84 +314,142 @@ game:GetService('Players').PlayerRemoving:Connect(updateHighlight)
 updateHighlight()
 
 -- Toggle for highlighting players
-VisualsTab:NewToggle("Highlights", "Highlights every player", false, function(toggleState)
-    highlightEnabled = toggleState
-    updateHighlight()  -- Update highlights based on the new state
-end)
+VisualsTab:CreateButton({
+    Name = "Highlights",
+    Info = {
+        Title = "Highlights every player",
+        Description = "Toggles player highlighting on and off.",
+    },
+    Interact = "Changable",
+    Callback = function()
+        highlightEnabled = not highlightEnabled
+        updateHighlight()  -- Update highlights based on the new state
+    end,
+})
 
 -- Misc Tab initialization
-local MiscTab = Window:CreateTab("Misc Tab", 4483362458) -- Title, Image
+local MiscTab = Window:CreateTab("Misc Tab", "ImageIdHere") -- Updated to use CreateTab
 
 -- Variable to store the original position
 local originalPosition = nil
 
 -- Toggle for Troll Teleport
-MiscTab:NewToggle("Troll Teleport", "Teleports you to spawn so enemies can't get you", false, function(toggleState)
-    local player = game:GetService("Players").LocalPlayer
-
-    if toggleState then
-        -- Store the original position
-        originalPosition = player.Character.HumanoidRootPart.CFrame
-        -- Teleport to the troll position
-        player.Character.HumanoidRootPart.CFrame = CFrame.new(58.172, -77.441, -242.071)
-    else
-        -- Teleport back to the original position if it exists
+MiscTab:CreateButton({
+    Name = "Troll Teleport",
+    Info = {
+        Title = "Teleports you to spawn so enemies can't get you",
+        Description = "Toggles teleportation to a safe spot.",
+    },
+    Interact = "Changable",
+    Callback = function()
+        local player = game:GetService("Players").LocalPlayer
         if originalPosition then
             player.Character.HumanoidRootPart.CFrame = originalPosition
+            originalPosition = nil
+        else
+            originalPosition = player.Character.HumanoidRootPart.CFrame
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(58.172, -77.441, -242.071)
         end
-    end
-end)
+    end,
+})
 
 -- Button to teleport to 1v1 position
-MiscTab:NewButton("Teleport to 1v1", "Teleports you to 1v1", function()
-    local player = game:GetService("Players").LocalPlayer
-    player.Character.HumanoidRootPart.CFrame = CFrame.new(27.186513900756836, -92.43848419189453, -203.76683044433594)
-end)
+MiscTab:CreateButton({
+    Name = "Teleport to 1v1",
+    Info = {
+        Title = "Teleports you to 1v1",
+        Description = "Teleports you to the 1v1 position.",
+    },
+    Interact = "Changable",
+    Callback = function()
+        local player = game:GetService("Players").LocalPlayer
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(27.186513900756836, -92.43848419189453, -203.76683044433594)
+    end,
+})
 
 -- Button to teleport to 2v2 position
-MiscTab:NewButton("Teleport to 2v2", "Teleports you to 2v2", function()
-    local player = game:GetService("Players").LocalPlayer
-    player.Character.HumanoidRootPart.CFrame = CFrame.new(27.883989334106445, -92.36083221435547, -188.33795166015625)
-end)
+MiscTab:CreateButton({
+    Name = "Teleport to 2v2",
+    Info = {
+        Title = "Teleports you to 2v2",
+        Description = "Teleports you to the 2v2 position.",
+    },
+    Interact = "Changable",
+    Callback = function()
+        local player = game:GetService("Players").LocalPlayer
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(27.883989334106445, -92.36083221435547, -188.33795166015625)
+    end,
+})
 
 -- Button to teleport to 3v3 position
-MiscTab:NewButton("Teleport to 3v3", "Teleports you to 3v3", function()
-    local player = game:GetService("Players").LocalPlayer
-    player.Character.HumanoidRootPart.CFrame = CFrame.new(29.191801071166992, -92.29767608642578, -172.86553955078125)
-end)
+MiscTab:CreateButton({
+    Name = "Teleport to 3v3",
+    Info = {
+        Title = "Teleports you to 3v3",
+        Description = "Teleports you to the 3v3 position.",
+    },
+    Interact = "Changable",
+    Callback = function()
+        local player = game:GetService("Players").LocalPlayer
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(29.191801071166992, -92.29767608642578, -172.86553955078125)
+    end,
+})
 
 -- Button to teleport to 4v4 position
-MiscTab:NewButton("Teleport to 4v4", "Teleports you to 4v4", function()
-    local player = game:GetService("Players").LocalPlayer
-    player.Character.HumanoidRootPart.CFrame = CFrame.new(30.448232650756836, -92.2098159790039, -155.46713256835938)
-end)
+MiscTab:CreateButton({
+    Name = "Teleport to 4v4",
+    Info = {
+        Title = "Teleports you to 4v4",
+        Description = "Teleports you to the 4v4 position.",
+    },
+    Interact = "Changable",
+    Callback = function()
+        local player = game:GetService("Players").LocalPlayer
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(30.448232650756836, -92.2098159790039, -155.46713256835938)
+    end,
+})
 
 -- Button to rejoin the current server
-MiscTab:NewButton("Rejoin", "Rejoins the current server", function()
-    local player = game:GetService("Players").LocalPlayer
-    local teleportService = game:GetService("TeleportService")
-    teleportService:Teleport(game.PlaceId, player)
-end)
+MiscTab:CreateButton({
+    Name = "Rejoin",
+    Info = {
+        Title = "Rejoins the current server",
+        Description = "Rejoins the current server.",
+    },
+    Interact = "Changable",
+    Callback = function()
+        local player = game:GetService("Players").LocalPlayer
+        local teleportService = game:GetService("TeleportService")
+        teleportService:Teleport(game.PlaceId, player)
+    end,
+})
 
 -- Button to serverhop to a different server
-MiscTab:NewButton("Serverhop", "Joins a different server", function()
-    local player = game:GetService("Players").LocalPlayer
-    local teleportService = game:GetService("TeleportService")
-    local httpService = game:GetService("HttpService")
-    local servers = httpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")).data
+MiscTab:CreateButton({
+    Name = "Serverhop",
+    Info = {
+        Title = "Joins a different server",
+        Description = "Server hops to a different server.",
+    },
+    Interact = "Changable",
+    Callback = function()
+        local player = game:GetService("Players").LocalPlayer
+        local teleportService = game:GetService("TeleportService")
+        local httpService = game:GetService("HttpService")
+        local servers = httpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")).data
 
-    local availableServers = {}
-    for _, server in pairs(servers) do
-        if server.playing < server.maxPlayers and server.id ~= game.JobId then
-            table.insert(availableServers, server.id)
+        local availableServers = {}
+        for _, server in pairs(servers) do
+            if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                table.insert(availableServers, server.id)
+            end
         end
-    end
 
-    if #availableServers > 0 then
-        local serverId = availableServers[math.random(1, #availableServers)]
-        teleportService:TeleportToPlaceInstance(game.PlaceId, serverId, player)
-    else
-        print("No available servers found.")
-    end
-end)
-
+        if #availableServers > 0 then
+            local serverId = availableServers[math.random(1, #availableServers)]
+            teleportService:TeleportToPlaceInstance(game.PlaceId, serverId, player)
+        else
+            print("No available servers found.")
+        end
+    end,
+})
