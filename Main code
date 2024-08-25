@@ -218,7 +218,7 @@ Tab:CreateInput({
 })
 
 -- Initialize the ArrayField library
-local VisualsTab = ArrayField.newTab("Visuals Tab", "ImageIdHere")
+local VisualsTab = Window:CreateTab("Visuals Tab", 4483362458) -- Title, Image
 
 -- Variables to keep track of the part and its state
 local part
