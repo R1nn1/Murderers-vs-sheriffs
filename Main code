@@ -216,3 +216,174 @@ Tab:CreateInput({
         end
     end,
 })
+
+-- Initialize the ArrayField library
+local VisualsTab = ArrayField.newTab("Visuals Tab", "ImageIdHere")
+
+-- Variables to keep track of the part and its state
+local part
+local rainbowConnection
+
+-- Function to create the part
+local function createPart()
+    part = Instance.new("Part")
+    part.Size = Vector3.new(100, 1, 100) -- Making it even larger and flat
+    part.Anchored = true
+    part.CanCollide = false
+    part.Material = Enum.Material.SmoothPlastic
+    part.Transparency = 0.25 -- Set to 0.25 transparency
+    part.Parent = workspace
+
+    -- Function to update the part's position and color
+    rainbowConnection = game:GetService("RunService").RenderStepped:Connect(function()
+        -- Get the player and their character
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local rootPart = player.Character.HumanoidRootPart
+            part.Position = rootPart.Position - Vector3.new(0, 7, 0) -- Position it 7 studs below the player
+
+            -- Slower rainbow color transition
+            local hue = (tick() % 20) / 20 -- Slows down the color transition
+            part.Color = Color3.fromHSV(hue, 1, 1)
+        end
+    end)
+end
+
+-- Function to remove the part
+local function removePart()
+    if rainbowConnection then
+        rainbowConnection:Disconnect()
+        rainbowConnection = nil
+    end
+    if part then
+        part:Destroy()
+        part = nil
+    end
+end
+
+-- Toggle for creating and removing the part
+VisualsTab:NewToggle("Cool Part", "Makes A Cool Part Below Your Feet Oh yea", false, function(toggleState)
+    if toggleState then
+        createPart()
+    else
+        removePart()
+    end
+end)
+
+-- Variables for highlighting state
+local highlightEnabled = false
+
+-- Function to highlight players
+local function updateHighlight()
+    for _, player in pairs(game:GetService('Players'):GetPlayers()) do
+        if player.Name ~= game:GetService('Players').LocalPlayer.Name and player.Character then
+            local character = player.Character
+            if highlightEnabled then
+                -- Create a Highlight object if it doesn't already exist
+                if not character:FindFirstChild("PlayerHighlight") then
+                    local highlight = Instance.new("Highlight")
+                    highlight.Name = "PlayerHighlight"
+                    highlight.Adornee = character
+                    highlight.FillColor = Color3.new(1, 0, 0)  -- Red color
+                    highlight.OutlineColor = Color3.new(1, 1, 1)  -- White outline
+                    highlight.Parent = character
+                end
+            else
+                -- Remove the Highlight object if it exists
+                if character:FindFirstChild("PlayerHighlight") then
+                    character:FindFirstChild("PlayerHighlight"):Destroy()
+                end
+            end
+        end
+    end
+end
+
+-- Update highlights every time a player joins or leaves
+game:GetService('Players').PlayerAdded:Connect(updateHighlight)
+game:GetService('Players').PlayerRemoving:Connect(updateHighlight)
+
+-- Initial call to update highlights based on current state
+updateHighlight()
+
+-- Toggle for highlighting players
+VisualsTab:NewToggle("Highlights", "Highlights every player", false, function(toggleState)
+    highlightEnabled = toggleState
+    updateHighlight()  -- Update highlights based on the new state
+end)
+
+-- Misc Tab initialization
+local MiscTab = ArrayField.newTab("Misc Tab", "ImageIdHere")
+
+-- Variable to store the original position
+local originalPosition = nil
+
+-- Toggle for Troll Teleport
+MiscTab:NewToggle("Troll Teleport", "Teleports you to spawn so enemies can't get you", false, function(toggleState)
+    local player = game:GetService("Players").LocalPlayer
+
+    if toggleState then
+        -- Store the original position
+        originalPosition = player.Character.HumanoidRootPart.CFrame
+        -- Teleport to the troll position
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(58.172, -77.441, -242.071)
+    else
+        -- Teleport back to the original position if it exists
+        if originalPosition then
+            player.Character.HumanoidRootPart.CFrame = originalPosition
+        end
+    end
+end)
+
+-- Button to teleport to 1v1 position
+MiscTab:NewButton("Teleport to 1v1", "Teleports you to 1v1", function()
+    local player = game:GetService("Players").LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(27.186513900756836, -92.43848419189453, -203.76683044433594)
+end)
+
+-- Button to teleport to 2v2 position
+MiscTab:NewButton("Teleport to 2v2", "Teleports you to 2v2", function()
+    local player = game:GetService("Players").LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(27.883989334106445, -92.36083221435547, -188.33795166015625)
+end)
+
+-- Button to teleport to 3v3 position
+MiscTab:NewButton("Teleport to 3v3", "Teleports you to 3v3", function()
+    local player = game:GetService("Players").LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(29.191801071166992, -92.29767608642578, -172.86553955078125)
+end)
+
+-- Button to teleport to 4v4 position
+MiscTab:NewButton("Teleport to 4v4", "Teleports you to 4v4", function()
+    local player = game:GetService("Players").LocalPlayer
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(30.448232650756836, -92.2098159790039, -155.46713256835938)
+end)
+
+-- Button to rejoin the current server
+MiscTab:NewButton("Rejoin", "Rejoins the current server", function()
+    local player = game:GetService("Players").LocalPlayer
+    local teleportService = game:GetService("TeleportService")
+    teleportService:Teleport(game.PlaceId, player)
+end)
+
+-- Button to serverhop to a different server
+MiscTab:NewButton("Serverhop", "Joins a different server", function()
+    local player = game:GetService("Players").LocalPlayer
+    local teleportService = game:GetService("TeleportService")
+    local httpService = game:GetService("HttpService")
+    local servers = httpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")).data
+
+    local availableServers = {}
+    for _, server in pairs(servers) do
+        if server.playing < server.maxPlayers and server.id ~= game.JobId then
+            table.insert(availableServers, server.id)
+        end
+    end
+
+    if #availableServers > 0 then
+        local serverId = availableServers[math.random(1, #availableServers)]
+        teleportService:TeleportToPlaceInstance(game.PlaceId, serverId, player)
+    else
+        print("No available servers found.")
+    end
+end)
+
