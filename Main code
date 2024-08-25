@@ -2,21 +2,38 @@ local ArrayField = loadstring(game:HttpGet("https://raw.githubusercontent.com/Ho
 --Documentation url: https://docs.sirius.menu/community/arrayfield
 
 local Window = ArrayField:CreateWindow({
-    Name = "Rinns Hub",
-    LoadingTitle = "Rinns Hub",
-    LoadingSubtitle = "Code by Rinn Ui by Sirius Ui remake by Hosvile",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = "RinnsHubConfigs", 
-        FileName = "RinnsHub"
-    },
-    Discord = {
-        Enabled = true,
-        Invite = "Mt9F5nc8Tg",
-        RememberJoins = false
-    },
-    KeySystem = false,
-})
+        Name = "Rinns Hub",
+        LoadingTitle = "Rinns Hub",
+        LoadingSubtitle = "Code by Rinn Ui by Sirius Ui remake by Hosvile",
+        ConfigurationSaving = {
+            Enabled = true,
+            FolderName = RinnsHubConfigs, -- Create a custom folder for your hub/game
+            FileName = "RinnsHub"
+        },
+        Discord = {
+            Enabled = true,
+            Invite = "Mt9F5nc8Tg", -- The Discord invite code, do not include discord.gg/
+            RememberJoins = false -- Set this to false to make them join the discord every time they load it up
+        },
+        KeySystem = false, -- Set this to true to use our key system
+        KeySettings = {
+            Title = "ArrayField",
+            Subtitle = "Key System",
+            Note = "Join the discord (discord.gg/sirius)",
+            FileName = "ArrayFieldsKeys",
+            SaveKey = false,
+            GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like ArrayField to get the key from
+            Key = {"Hello",'Bye'},
+            Actions = {
+                [1] = {
+                    Text = 'Click here to copy the key link',
+                    OnPress = function()
+
+                    end,
+                }
+            },
+        }
+    })
 
 local Tab = Window:CreateTab("Main Tab", 4483362458)
 
