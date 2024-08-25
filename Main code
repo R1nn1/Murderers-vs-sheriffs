@@ -1,4 +1,16 @@
-local ArrayField = loadstring(game:HttpGet("https://raw.githubusercontent.com/Hosvile/Refinement/main/MC%3AArrayfield%20Library"))()
+local UserInputService = game:GetService("UserInputService")
+
+local ArrayField
+
+if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
+    -- Mobile device
+    print("Player is on mobile")
+    ArrayField = loadstring(game:HttpGet("https://raw.githubusercontent.com/Hosvile/Refinement/main/MC%3AArrayfield%20Library"))()
+else
+    -- PC device
+    print("Player is on PC")
+    ArrayField = loadstring(game:HttpGet('https://raw.githubusercontent.com/UI-Interface/ArrayField/main/Source.lua'))()
+end
 
 local Window = ArrayField:CreateWindow({
     Name = "Rinns Hub",
