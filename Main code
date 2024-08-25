@@ -312,7 +312,7 @@ VisualsTab:NewToggle("Highlights", "Highlights every player", false, function(to
 end)
 
 -- Misc Tab initialization
-local MiscTab = ArrayField.newTab("Misc Tab", "ImageIdHere")
+local MiscTab = Window:CreateTab("Misc Tab", 4483362458) -- Title, Image
 
 -- Variable to store the original position
 local originalPosition = nil
